@@ -4,7 +4,14 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
+import os
+import zipfile
+import pandas as pd
 
+def listar_carpetas(ruta):
+    carpetas = [nombre for nombre in os.listdir(ruta)
+                if os.path.isdir(os.path.join(ruta, nombre))]   
+    return carpetas
 
 def pregunta_01():
     """
@@ -71,3 +78,28 @@ def pregunta_01():
 
 
     """
+    with zipfile.ZipFile('files/input.zip' , 'r') as zip:
+        zip.extractall()
+
+    train_df = pd.DataFrame(columns=['phrase', 'target'])
+    test_df = pd.DataFrame(columns=['phrase', 'target'])
+
+    for primera_carpeta in listar_carpetas('input'):
+        for segunda_carpeta in listar_carpetas(f'input/{primera_carpeta}'):
+            for archivo in os.listdir(f'input/{primera_carpeta}/{segunda_carpeta}'):
+                with open(f'input/{primera_carpeta}/{segunda_carpeta}/{archivo}', 'r') as txt:
+                        for line in txt:
+                            line = line.strip()
+                            aux_df = pd.DataFrame([{'phrase': line,'target': segunda_carpeta}])
+                            if primera_carpeta == 'train':
+                                train_df = pd.concat([train_df, aux_df], ignore_index=True)
+                            else:    
+                                test_df = pd.concat([test_df, aux_df], ignore_index=True)
+                    
+    if not os.path.exists('files/output'):
+        os.mkdir('files/output')         
+
+    train_df.to_csv('files/output/train_dataset.csv')
+    test_df.to_csv('files/output/test_dataset.csv')
+
+pregunta_01()
